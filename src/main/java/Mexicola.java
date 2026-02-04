@@ -8,7 +8,7 @@ public class Mexicola {
     private static final String LINE = "____________________________________________________________";
 
     // Class-level state to track tasks
-    private static Task[] tasks = new Task[MAX_TASKS];
+    private static final Task[] tasks = new Task[MAX_TASKS];
     private static int taskCount = 0;
 
     /**
