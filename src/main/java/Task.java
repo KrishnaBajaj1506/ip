@@ -17,6 +17,8 @@ public class Task {
 
     /**
      * Returns the status icon based on whether the task is done.
+     *
+     * @return The formatted string representation.
      */
     public String getStatusIcon() {
         return (isDone ? "X" : " ");
@@ -35,7 +37,12 @@ public class Task {
     public void unmark() {
         this.isDone = false;
     }
-
+    /**
+     * Returns the string representation of the task.
+     * Format: "[Status] Description"
+     *
+     * @return The formatted string representation.
+     */
     @Override
     public String toString() {
         return "[" + getStatusIcon() + "] " + description;
