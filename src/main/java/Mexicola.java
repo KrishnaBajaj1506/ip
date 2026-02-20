@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -8,8 +9,6 @@ public class Mexicola {
     private static final String LINE = "____________________________________________________________";
 
     // Class-level state to track tasks
-    private static final Task[] tasks = new Task[MAX_TASKS];
-    private static int taskCount = 0;
 
     public static void main(String[] args) {
         printWelcome();
@@ -59,6 +58,9 @@ public class Mexicola {
             case "event":
                 handleEvent(userInput);
                 break;
+            case "delete":
+                handleDelete(userInput);
+                break;
             default:
                 throw new MexicolaException("OOPS!!! I'm sorry, but I don't know what '" + command + "' means :-(");
         }
@@ -69,8 +71,8 @@ public class Mexicola {
     private static void handleList() {
         System.out.println("    " + LINE);
         System.out.println("     Here are the tasks in your list:");
-        for (int i = 0; i < taskCount; i++) {
-            System.out.println("     " + (i + 1) + "." + tasks[i]);
+        for (int i = 0; i < tasks.size(); i++) { // Use .size()
+            System.out.println("     " + (i + 1) + "." + tasks.get(i)); // Use .get()
         }
         System.out.println("    " + LINE);
     }
@@ -78,16 +80,16 @@ public class Mexicola {
     private static void handleMark(String userInput) {
         int index = parseIndex(userInput);
         if (isValidIndex(index)) {
-            tasks[index].markAsDone();
-            printMessage("Nice! I've marked this task as done:\n       " + tasks[index]);
+            tasks.get(index).markAsDone(); // Changed tasks[index] to tasks.get(index)
+            printMessage("Nice! I've marked this task as done:\n       " + tasks.get(index));
         }
     }
 
     private static void handleUnmark(String userInput) {
         int index = parseIndex(userInput);
         if (isValidIndex(index)) {
-            tasks[index].unmark();
-            printMessage("OK, I've marked this task as not done yet:\n       " + tasks[index]);
+            tasks.get(index).unmark(); // Changed tasks[index] to tasks.get(index)
+            printMessage("OK, I've marked this task as not done yet:\n       " + tasks.get(index));
         }
     }
 
@@ -147,14 +149,9 @@ public class Mexicola {
     // --- Core Logic Helpers ---
 
     private static void addTask(Task task) {
-        if (taskCount >= MAX_TASKS) {
-            printMessage("Sorry, your task list is full!");
-            return;
-        }
-        tasks[taskCount] = task;
-        taskCount++;
+        tasks.add(task); // ArrayLists grow automatically!
         printMessage("Got it. I've added this task:\n       " + task +
-                "\n     Now you have " + taskCount + " tasks in the list.");
+                "\n     Now you have " + tasks.size() + " tasks in the list.");
     }
 
     private static int parseIndex(String userInput) {
@@ -167,7 +164,7 @@ public class Mexicola {
     }
 
     private static boolean isValidIndex(int index) {
-        if (index < 0 || index >= taskCount) {
+        if (index < 0 || index >= tasks.size()) { // Use .size()
             printMessage("OOPS!!! That task number is invalid.");
             return false;
         }
@@ -177,7 +174,6 @@ public class Mexicola {
     // --- UI Helpers ---
 
     private static void printWelcome() {
-
         printMessage("Hello! I'm Mexicola\n     What can I do for you?");
     }
 
