@@ -1,7 +1,7 @@
 /**
  * Represents a task that can be tracked by the chatbot.
  */
-public class Task {
+public abstract class Task {
     protected String description;
     protected boolean isDone;
 
@@ -21,6 +21,7 @@ public class Task {
      * @return The formatted string representation.
      */
     public String getStatusIcon() {
+
         return (isDone ? "X" : " ");
     }
 
@@ -28,6 +29,7 @@ public class Task {
      * Marks the task as completed.
      */
     public void markAsDone() {
+
         this.isDone = true;
     }
 
@@ -35,6 +37,7 @@ public class Task {
      * Marks the task as not completed.
      */
     public void unmark() {
+
         this.isDone = false;
     }
     /**
@@ -45,6 +48,9 @@ public class Task {
      */
     @Override
     public String toString() {
+
         return "[" + getStatusIcon() + "] " + description;
     }
+
+    public abstract String toFileFormat();
 }

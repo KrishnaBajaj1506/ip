@@ -1,15 +1,19 @@
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.FileNotFoundException;
 
 /**
  * Represents the main entry point for the Mexicola chatbot.
  */
 public class Mexicola {
-    private static final int MAX_TASKS = 100;
+    private static final String FILE_PATH = "./data/mexicola.txt"; // Path for Level 7
     private static final String LINE = "____________________________________________________________";
 
     // Class-level state to track tasks
-    private static final Task[] tasks = new Task[MAX_TASKS];
-    private static int taskCount = 0;
+    private static final ArrayList<Task> tasks = new ArrayList<>();
 
     /**
      * The main method that runs the chatbot.
@@ -18,6 +22,7 @@ public class Mexicola {
      */
     public static void main(String[] args) {
         printWelcome();
+        loadTasks();
         runBot();
         printExit();
     }
@@ -35,6 +40,58 @@ public class Mexicola {
             handleCommand(userInput);
         }
         sc.close();
+    }
+
+    private static void saveTasks() {
+        try {
+            File f = new File(FILE_PATH);
+            if (!f.getParentFile().exists()) {
+                f.getParentFile().mkdirs(); // Create 'data' folder if missing
+            }
+            FileWriter fw = new FileWriter(FILE_PATH);
+            for (Task t : tasks) {
+                fw.write(t.toFileFormat() + System.lineSeparator());
+            }
+            fw.close();
+        } catch (IOException e) {
+            printMessage("Error saving tasks: " + e.getMessage());
+        }
+    }
+
+    private static void loadTasks() {
+        File f = new File(FILE_PATH);
+        if (!f.exists()) return;
+
+        try {
+            Scanner s = new Scanner(f);
+            while (s.hasNext()) {
+                String line = s.nextLine();
+                String[] parts = line.split(" \\| ");
+                String type = parts[0];
+                boolean isDone = parts[1].equals("1");
+                String description = parts[2];
+
+                switch (type) {
+                    case "T":
+                        Todo t = new Todo(description);
+                        if (isDone) t.markAsDone();
+                        tasks.add(t);
+                        break;
+                    case "D":
+                        Deadline d = new Deadline(description, parts[3]);
+                        if (isDone) d.markAsDone();
+                        tasks.add(d);
+                        break;
+                    case "E":
+                        Event e = new Event(description, parts[3], parts[4]);
+                        if (isDone) e.markAsDone();
+                        tasks.add(e);
+                        break;
+                }
+            }
+        } catch (FileNotFoundException e) {
+            printMessage("No existing data file found.");
+        }
     }
 
     /**
@@ -72,8 +129,8 @@ public class Mexicola {
     private static void handleList() {
         System.out.println("    " + LINE);
         System.out.println("     Here are the tasks in your list:");
-        for (int i = 0; i < taskCount; i++) {
-            System.out.println("     " + (i + 1) + "." + tasks[i]);
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println("     " + (i + 1) + "." + tasks.get(i));
         }
         System.out.println("    " + LINE);
     }
@@ -81,16 +138,18 @@ public class Mexicola {
     private static void handleMark(String userInput) {
         int index = parseIndex(userInput);
         if (isValidIndex(index)) {
-            tasks[index].markAsDone();
-            printMessage("Nice! I've marked this task as done:\n       " + tasks[index]);
+            tasks.get(index).markAsDone();
+            printMessage("Nice! I've marked this task as done:\n       " + tasks.get(index));
+            saveTasks();
         }
     }
 
     private static void handleUnmark(String userInput) {
         int index = parseIndex(userInput);
         if (isValidIndex(index)) {
-            tasks[index].unmark();
-            printMessage("OK, I've marked this task as not done yet:\n       " + tasks[index]);
+            tasks.get(index).unmark();
+            printMessage("OK, I've marked this task as not done yet:\n       " + tasks.get(index));
+            saveTasks();
         }
     }
 
@@ -148,14 +207,10 @@ public class Mexicola {
     // --- Core Logic Helpers ---
 
     private static void addTask(Task task) {
-        if (taskCount >= MAX_TASKS) {
-            printMessage("Sorry, your task list is full!");
-            return;
-        }
-        tasks[taskCount] = task;
-        taskCount++;
+        tasks.add(task); // ArrayLists grow automatically
         printMessage("Got it. I've added this task:\n       " + task +
-                "\n     Now you have " + taskCount + " tasks in the list.");
+                "\n     Now you have " + tasks.size() + " tasks in the list.");
+        saveTasks(); // Save after every add
     }
 
     private static int parseIndex(String userInput) {
@@ -169,7 +224,7 @@ public class Mexicola {
     }
 
     private static boolean isValidIndex(int index) {
-        if (index < 0 || index >= taskCount) {
+        if (index < 0 || index >= tasks.size()) { // Changed taskCount to tasks.size()
             printMessage("OOPS!!! That task number is invalid.");
             return false;
         }
