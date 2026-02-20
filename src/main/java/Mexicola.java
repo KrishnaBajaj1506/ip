@@ -1,30 +1,21 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
  * Represents the main entry point for the Mexicola chatbot.
  */
 public class Mexicola {
-    private static final int MAX_TASKS = 100;
+    private static final ArrayList<Task> tasks = new ArrayList<>();
     private static final String LINE = "____________________________________________________________";
 
     // Class-level state to track tasks
-    private static final Task[] tasks = new Task[MAX_TASKS];
-    private static int taskCount = 0;
 
-    /**
-     * The main method that runs the chatbot.
-     *
-     * @param args Command line arguments (not used).
-     */
     public static void main(String[] args) {
         printWelcome();
         runBot();
         printExit();
     }
 
-    /**
-     * Runs the main command loop of the bot.
-     */
     private static void runBot() {
         Scanner sc = new Scanner(System.in);
         while (true) {
@@ -32,15 +23,20 @@ public class Mexicola {
             if (userInput.equalsIgnoreCase("bye")) {
                 break;
             }
-            handleCommand(userInput);
+            try {
+                handleCommand(userInput);
+            } catch (MexicolaException e) {
+                printMessage(e.getMessage());
+            }
         }
         sc.close();
     }
 
     /**
-     * routes the user's input to the correct helper method.
+     * Routes the user's input to the correct helper method.
+     * @throws MexicolaException If the command is unrecognized or arguments are missing.
      */
-    private static void handleCommand(String userInput) {
+    private static void handleCommand(String userInput) throws MexicolaException {
         String command = userInput.split(" ")[0].toLowerCase();
 
         switch (command) {
@@ -62,8 +58,11 @@ public class Mexicola {
             case "event":
                 handleEvent(userInput);
                 break;
+            case "delete":
+                handleDelete(userInput);
+                break;
             default:
-                printMessage("OOPS!!! I'm sorry, but I don't know what that means :-(");
+                throw new MexicolaException("OOPS!!! I'm sorry, but I don't know what '" + command + "' means :-(");
         }
     }
 
@@ -72,8 +71,8 @@ public class Mexicola {
     private static void handleList() {
         System.out.println("    " + LINE);
         System.out.println("     Here are the tasks in your list:");
-        for (int i = 0; i < taskCount; i++) {
-            System.out.println("     " + (i + 1) + "." + tasks[i]);
+        for (int i = 0; i < tasks.size(); i++) { // Use .size()
+            System.out.println("     " + (i + 1) + "." + tasks.get(i)); // Use .get()
         }
         System.out.println("    " + LINE);
     }
@@ -81,86 +80,82 @@ public class Mexicola {
     private static void handleMark(String userInput) {
         int index = parseIndex(userInput);
         if (isValidIndex(index)) {
-            tasks[index].markAsDone();
-            printMessage("Nice! I've marked this task as done:\n       " + tasks[index]);
+            tasks.get(index).markAsDone(); // Changed tasks[index] to tasks.get(index)
+            printMessage("Nice! I've marked this task as done:\n       " + tasks.get(index));
         }
     }
 
     private static void handleUnmark(String userInput) {
         int index = parseIndex(userInput);
         if (isValidIndex(index)) {
-            tasks[index].unmark();
-            printMessage("OK, I've marked this task as not done yet:\n       " + tasks[index]);
+            tasks.get(index).unmark(); // Changed tasks[index] to tasks.get(index)
+            printMessage("OK, I've marked this task as not done yet:\n       " + tasks.get(index));
         }
     }
 
-    private static void handleTodo(String userInput) {
+    private static void handleTodo(String userInput) throws MexicolaException {
         String description = userInput.substring(4).trim();
         if (description.isEmpty()) {
-            printMessage("OOPS!!! The description of a todo cannot be empty.");
-            return;
+            throw new MexicolaException("OOPS!!! The description of a todo cannot be empty.");
         }
         addTask(new Todo(description));
     }
 
-    private static void handleDeadline(String userInput) {
+    private static void handleDeadline(String userInput) throws MexicolaException {
         int byIndex = userInput.indexOf("/by");
         if (byIndex == -1) {
-            printMessage("OOPS!!! Please use '/by' to specify the deadline date.");
-            return;
+            throw new MexicolaException("OOPS!!! Please use '/by' to specify the deadline date.");
         }
 
-        // Extract description (start after "deadline " and end before "/by")
         String description = userInput.substring(8, byIndex).trim();
-        // Extract date (start after "/by ")
         String by = userInput.substring(byIndex + 3).trim();
 
         if (description.isEmpty() || by.isEmpty()) {
-            printMessage("OOPS!!! The description or date cannot be empty.");
-            return;
+            throw new MexicolaException("OOPS!!! The description or date cannot be empty.");
         }
         addTask(new Deadline(description, by));
     }
 
-    private static void handleEvent(String userInput) {
+    private static void handleEvent(String userInput) throws MexicolaException {
         int fromIndex = userInput.indexOf("/from");
         int toIndex = userInput.indexOf("/to");
 
         if (fromIndex == -1 || toIndex == -1) {
-            printMessage("OOPS!!! Please use '/from' and '/to' to specify the event time.");
-            return;
+            throw new MexicolaException("Wait! You forgot the tags. Please use '/from' and '/to'.");
         }
 
-        // Extract description (start after "event " and end before "/from")
         String description = userInput.substring(5, fromIndex).trim();
-        // Extract from time (start after "/from " and end before "/to")
         String from = userInput.substring(fromIndex + 5, toIndex).trim();
-        // Extract to time (start after "/to ")
         String to = userInput.substring(toIndex + 3).trim();
 
         if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
-            printMessage("OOPS!!! Event description and time cannot be empty.");
-            return;
+            throw new MexicolaException("Whoops! The event description and times cannot be empty.");
         }
+
         addTask(new Event(description, from, to));
+    }
+
+    private static void handleDelete(String userInput) throws MexicolaException {
+        int index = parseIndex(userInput);
+        if (index < 0 || index >= tasks.size()) {
+            throw new MexicolaException("I can't delete what isn't there! Pick a valid number.");
+        }
+
+        Task removedTask = tasks.remove(index); // ArrayList handles the "shifting" for you!
+        printMessage("Noted. I've removed this task:\n       " + removedTask +
+                "\n     Now you have " + tasks.size() + " tasks in the list.");
     }
 
     // --- Core Logic Helpers ---
 
     private static void addTask(Task task) {
-        if (taskCount >= MAX_TASKS) {
-            printMessage("Sorry, your task list is full!");
-            return;
-        }
-        tasks[taskCount] = task;
-        taskCount++;
+        tasks.add(task); // ArrayLists grow automatically!
         printMessage("Got it. I've added this task:\n       " + task +
-                "\n     Now you have " + taskCount + " tasks in the list.");
+                "\n     Now you have " + tasks.size() + " tasks in the list.");
     }
 
     private static int parseIndex(String userInput) {
         try {
-            // Split by space and take the second part (the number)
             return Integer.parseInt(userInput.split(" ")[1]) - 1;
         } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             printMessage("OOPS!!! Please provide a valid task number.");
@@ -169,7 +164,7 @@ public class Mexicola {
     }
 
     private static boolean isValidIndex(int index) {
-        if (index < 0 || index >= taskCount) {
+        if (index < 0 || index >= tasks.size()) { // Use .size()
             printMessage("OOPS!!! That task number is invalid.");
             return false;
         }
@@ -183,6 +178,7 @@ public class Mexicola {
     }
 
     private static void printExit() {
+
         printMessage("Bye. Hope to see you again soon!");
     }
 
