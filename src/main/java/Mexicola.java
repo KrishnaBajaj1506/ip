@@ -106,18 +106,23 @@ public class Mexicola {
                 break;
             case "mark":
                 handleMark(userInput);
+                saveTasks();
                 break;
             case "unmark":
                 handleUnmark(userInput);
+                saveTasks();
                 break;
             case "todo":
                 handleTodo(userInput);
+                saveTasks();
                 break;
             case "deadline":
                 handleDeadline(userInput);
+                saveTasks();
                 break;
             case "event":
                 handleEvent(userInput);
+                saveTasks();
                 break;
             default:
                 printMessage("OOPS!!! I'm sorry, but I don't know what that means :-(");
@@ -140,7 +145,6 @@ public class Mexicola {
         if (isValidIndex(index)) {
             tasks.get(index).markAsDone();
             printMessage("Nice! I've marked this task as done:\n       " + tasks.get(index));
-            saveTasks();
         }
     }
 
@@ -149,7 +153,6 @@ public class Mexicola {
         if (isValidIndex(index)) {
             tasks.get(index).unmark();
             printMessage("OK, I've marked this task as not done yet:\n       " + tasks.get(index));
-            saveTasks();
         }
     }
 
@@ -210,7 +213,6 @@ public class Mexicola {
         tasks.add(task); // ArrayLists grow automatically
         printMessage("Got it. I've added this task:\n       " + task +
                 "\n     Now you have " + tasks.size() + " tasks in the list.");
-        saveTasks(); // Save after every add
     }
 
     private static int parseIndex(String userInput) {
