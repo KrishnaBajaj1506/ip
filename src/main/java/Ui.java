@@ -118,6 +118,27 @@ public class Ui {
         showMessage("OK, I've marked this task as not done yet:\n       " + task);
     }
 
+    /**
+     * Displays the results of a {@code find} search.
+     * <p>
+     * If no tasks match, a friendly message is shown instead of an empty list.
+     * </p>
+     *
+     * @param matches the list of tasks that matched the search keyword
+     */
+    public void showMatchingTasks(java.util.ArrayList<Task> matches) {
+        showLine();
+        if (matches.isEmpty()) {
+            System.out.println("     No matching tasks found.");
+        } else {
+            System.out.println("     Here are the matching tasks in your list:");
+            for (int i = 0; i < matches.size(); i++) {
+                System.out.println("     " + (i + 1) + "." + matches.get(i));
+            }
+        }
+        showLine();
+    }
+
     // -------------------------------------------------------------------------
     // Private helper
     // -------------------------------------------------------------------------

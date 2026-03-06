@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 /**
  * Manages the list of tasks in the Mexicola application.
@@ -73,5 +74,19 @@ public class TaskList {
      */
     public ArrayList<Task> getTasks() {
         return tasks;
+    }
+
+    /**
+     * Returns all tasks whose descriptions contain the given keyword
+     * (case-insensitive).
+     *
+     * @param keyword the search term
+     * @return a new {@link ArrayList} of matching {@link Task} objects
+     */
+    public ArrayList<Task> find(String keyword) {
+        String lower = keyword.toLowerCase();
+        return tasks.stream()
+                .filter(t -> t.description.toLowerCase().contains(lower))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 }

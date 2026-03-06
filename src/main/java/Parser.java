@@ -46,6 +46,9 @@ public class Parser {
             case "delete":
                 handleDelete(userInput, tasks, ui);
                 break;
+            case "find":
+                handleFind(userInput, tasks, ui);
+                break;
             default:
                 throw new MexicolaException("OOPS!!! I'm sorry, but I don't know what '" + command + "' means :-(");
         }
@@ -154,8 +157,25 @@ public class Parser {
     }
 
     /**
-     * Deletes the task at the specified 1-based index from the list.
+     * Searches the task list for tasks whose descriptions contain the given
+     * keyword.
      *
+     * @param userInput raw input starting with "find"
+     * @param tasks     the task list to search
+     * @param ui        the UI handler
+     * @throws MexicolaException if no keyword is provided
+     */
+    private static void handleFind(String userInput, TaskList tasks, Ui ui) throws MexicolaException {
+        String keyword = userInput.substring(4).trim();
+        if (keyword.isEmpty()) {
+            throw new MexicolaException("OOPS!!! Please provide a keyword to search for.");
+        }
+        ui.showMatchingTasks(tasks.find(keyword));
+    }
+
+    /**
+     * Deletes the task at the specified 1-based index from the list.
+     * 
      * @param userInput raw input containing the task number
      * @param tasks     the task list
      * @param ui        the UI handler
