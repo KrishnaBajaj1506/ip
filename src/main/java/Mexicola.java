@@ -1,255 +1,70 @@
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.FileNotFoundException;
 
 /**
- * Represents the main entry point for the Mexicola chatbot.
+ * Main entry point for the Mexicola chatbot.
+ * Instantiates the {@link Ui}, {@link Storage}, {@link TaskList}, and
+ * {@link Parser} classes to run the chatbot loop.
  */
 public class Mexicola {
-    private static final ArrayList<Task> tasks = new ArrayList<>();
-    private static final String FILE_PATH = "./data/mexicola.txt"; // Path for Level 7
-    private static final String LINE = "____________________________________________________________";
 
-    // Class-level state to track tasks
+    private static final String FILE_PATH = "./data/mexicola.txt";
 
+    private final Ui ui;
+    private final Storage storage;
+    private TaskList tasks;
 
-    public static void main(String[] args) {
-        printWelcome();
-        loadTasks();
-        runBot();
-        printExit();
-    }
-
-    private static void runBot() {
-        Scanner sc = new Scanner(System.in);
-        while (true) {
-            String userInput = sc.nextLine();
-            if (userInput.equalsIgnoreCase("bye")) {
-                break;
-            }
-            try {
-                handleCommand(userInput);
-            } catch (MexicolaException e) {
-                printMessage(e.getMessage());
-            }
-        }
-        sc.close();
-    }
-
-    private static void saveTasks() {
+    /**
+     * Initialises the chatbot by setting up the UI, storage, and task list.
+     * If the saved data file cannot be loaded, an empty task list is used instead.
+     *
+     * @param filePath path to the persistent data file
+     */
+    public Mexicola(String filePath) {
+        ui = new Ui();
+        storage = new Storage(filePath);
         try {
-            File f = new File(FILE_PATH);
-            if (!f.getParentFile().exists()) {
-                f.getParentFile().mkdirs(); // Create 'data' folder if missing
-            }
-            FileWriter fw = new FileWriter(FILE_PATH);
-            for (Task t : tasks) {
-                fw.write(t.toFileFormat() + System.lineSeparator());
-            }
-            fw.close();
-        } catch (IOException e) {
-            printMessage("Error saving tasks: " + e.getMessage());
-        }
-    }
-
-    private static void loadTasks() {
-        File f = new File(FILE_PATH);
-        if (!f.exists()) return;
-
-        try {
-            Scanner s = new Scanner(f);
-            while (s.hasNext()) {
-                String line = s.nextLine();
-                String[] parts = line.split(" \\| ");
-                String type = parts[0];
-                boolean isDone = parts[1].equals("1");
-                String description = parts[2];
-
-                switch (type) {
-                    case "T":
-                        Todo t = new Todo(description);
-                        if (isDone) t.markAsDone();
-                        tasks.add(t);
-                        break;
-                    case "D":
-                        Deadline d = new Deadline(description, parts[3]);
-                        if (isDone) d.markAsDone();
-                        tasks.add(d);
-                        break;
-                    case "E":
-                        Event e = new Event(description, parts[3], parts[4]);
-                        if (isDone) e.markAsDone();
-                        tasks.add(e);
-                        break;
-                }
-            }
-        } catch (FileNotFoundException e) {
-            printMessage("No existing data file found.");
+            tasks = new TaskList(storage.load());
+        } catch (MexicolaException e) {
+            ui.showLoadingError();
+            tasks = new TaskList();
         }
     }
 
     /**
-     * Routes the user's input to the correct helper method.
-     * @throws MexicolaException If the command is unrecognized or arguments are missing.
+     * Starts the main command loop.
+     * <p>
+     * Reads commands from the user, delegates parsing and execution to
+     * {@link Parser}, and saves the task list after every mutating command.
+     * The loop exits when the user types {@code bye}.
+     * </p>
      */
-    private static void handleCommand(String userInput) throws MexicolaException {
-        String command = userInput.split(" ")[0].toLowerCase();
+    public void run() {
+        ui.showWelcome();
+        boolean isRunning = true;
 
-        switch (command) {
-            case "list":
-                handleList();
-                break;
-            case "mark":
-                handleMark(userInput);
-                saveTasks();
-                break;
-            case "unmark":
-                handleUnmark(userInput);
-                saveTasks();
-                break;
-            case "todo":
-                handleTodo(userInput);
-                saveTasks();
-                break;
-            case "deadline":
-                handleDeadline(userInput);
-                saveTasks();
-                break;
-            case "event":
-                handleEvent(userInput);
-                saveTasks();
-                break;
-            case "delete":
-                handleDelete(userInput);
-                saveTasks();
-                break;
-            default:
-                throw new MexicolaException("OOPS!!! I'm sorry, but I don't know what '" + command + "' means :-(");
-        }
-    }
-
-    // --- Helper Methods for Commands ---
-
-    private static void handleList() {
-        System.out.println("    " + LINE);
-        System.out.println("     Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            System.out.println("     " + (i + 1) + "." + tasks.get(i));
-        }
-        System.out.println("    " + LINE);
-    }
-
-    private static void handleMark(String userInput) {
-        int index = parseIndex(userInput);
-        if (isValidIndex(index)) {
-            tasks.get(index).markAsDone(); // Changed tasks[index] to tasks.get(index)
-            printMessage("Nice! I've marked this task as done:\n       " + tasks.get(index));
-        }
-    }
-
-    private static void handleUnmark(String userInput) {
-        int index = parseIndex(userInput);
-        if (isValidIndex(index)) {
-            tasks.get(index).unmark();
-            printMessage("OK, I've marked this task as not done yet:\n       " + tasks.get(index));
-        }
-    }
-
-    private static void handleTodo(String userInput) throws MexicolaException {
-        String description = userInput.substring(4).trim();
-        if (description.isEmpty()) {
-            throw new MexicolaException("OOPS!!! The description of a todo cannot be empty.");
-        }
-        addTask(new Todo(description));
-    }
-
-    private static void handleDeadline(String userInput) throws MexicolaException {
-        int byIndex = userInput.indexOf("/by");
-        if (byIndex == -1) {
-            throw new MexicolaException("OOPS!!! Please use '/by' to specify the deadline date.");
+        while (isRunning) {
+            String userInput = ui.readCommand();
+            ui.showLine();
+            try {
+                isRunning = Parser.parse(userInput, tasks, ui);
+                // Persist after every successful command (save is cheap)
+                storage.save(tasks.getTasks());
+            } catch (MexicolaException e) {
+                ui.showError(e.getMessage());
+            } catch (IOException e) {
+                ui.showError("Error saving tasks: " + e.getMessage());
+            }
         }
 
-        String description = userInput.substring(8, byIndex).trim();
-        String by = userInput.substring(byIndex + 3).trim();
-
-        if (description.isEmpty() || by.isEmpty()) {
-            throw new MexicolaException("OOPS!!! The description or date cannot be empty.");
-        }
-        addTask(new Deadline(description, by));
+        ui.showExit();
     }
 
-    private static void handleEvent(String userInput) throws MexicolaException {
-        int fromIndex = userInput.indexOf("/from");
-        int toIndex = userInput.indexOf("/to");
-
-        if (fromIndex == -1 || toIndex == -1) {
-            throw new MexicolaException("Wait! You forgot the tags. Please use '/from' and '/to'.");
-        }
-
-        String description = userInput.substring(5, fromIndex).trim();
-        String from = userInput.substring(fromIndex + 5, toIndex).trim();
-        String to = userInput.substring(toIndex + 3).trim();
-
-        if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
-            throw new MexicolaException("Whoops! The event description and times cannot be empty.");
-        }
-
-        addTask(new Event(description, from, to));
-    }
-
-    private static void handleDelete(String userInput) throws MexicolaException {
-        int index = parseIndex(userInput);
-        if (index < 0 || index >= tasks.size()) {
-            throw new MexicolaException("I can't delete what isn't there! Pick a valid number.");
-        }
-
-        Task removedTask = tasks.remove(index); // ArrayList handles the "shifting" for you!
-        printMessage("Noted. I've removed this task:\n       " + removedTask +
-                "\n     Now you have " + tasks.size() + " tasks in the list.");
-    }
-
-    // --- Core Logic Helpers ---
-
-    private static void addTask(Task task) {
-        tasks.add(task); // ArrayLists grow automatically
-        printMessage("Got it. I've added this task:\n       " + task +
-                "\n     Now you have " + tasks.size() + " tasks in the list.");
-    }
-
-    private static int parseIndex(String userInput) {
-        try {
-            return Integer.parseInt(userInput.split(" ")[1]) - 1;
-        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-            printMessage("OOPS!!! Please provide a valid task number.");
-            return -1;
-        }
-    }
-
-    private static boolean isValidIndex(int index) {
-        if (index < 0 || index >= tasks.size()) { // Changed taskCount to tasks.size()
-            printMessage("OOPS!!! That task number is invalid.");
-            return false;
-        }
-        return true;
-    }
-
-    // --- UI Helpers ---
-
-    private static void printWelcome() {
-        printMessage("Hello! I'm Mexicola\n     What can I do for you?");
-    }
-
-    private static void printExit() {
-
-        printMessage("Bye. Hope to see you again soon!");
-    }
-
-    private static void printMessage(String message) {
-        System.out.println("    " + LINE);
-        System.out.println("     " + message);
-        System.out.println("    " + LINE);
+    /**
+     * Application entry point.
+     *
+     * @param args command-line arguments (not used)
+     */
+    public static void main(String[] args) {
+        new Mexicola(FILE_PATH).run();
     }
 }
