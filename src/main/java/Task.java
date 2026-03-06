@@ -40,6 +40,7 @@ public abstract class Task {
 
         this.isDone = false;
     }
+
     /**
      * Returns the string representation of the task.
      * Format: "[Status] Description"
@@ -52,5 +53,11 @@ public abstract class Task {
         return "[" + getStatusIcon() + "] " + description;
     }
 
+    /**
+     * Returns the file-serialisable representation of this task.
+     * Used by {@link Storage} to persist tasks between sessions.
+     *
+     * @return the pipe-separated string representation for the data file
+     */
     public abstract String toFileFormat();
 }

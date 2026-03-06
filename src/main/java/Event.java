@@ -9,8 +9,8 @@ public class Event extends Task {
      * Initializes an Event task with a description, start time, and end time.
      *
      * @param description The description of the event.
-     * @param from The start time/date.
-     * @param to The end time/date.
+     * @param from        The start time/date.
+     * @param to          The end time/date.
      */
     public Event(String description, String from, String to) {
         super(description);
@@ -29,6 +29,12 @@ public class Event extends Task {
         return "[E]" + super.toString() + " (from: " + from + " to: " + to + ")";
     }
 
+    /**
+     * Returns the file-serialisable representation of this event task.
+     *
+     * @return the pipe-separated string for the data file, e.g.
+     *         {@code E | 0 | meeting | Mon 2pm | Mon 4pm}
+     */
     @Override
     public String toFileFormat() {
         return "E | " + (isDone ? "1" : "0") + " | " + description + " | " + from + " | " + to;
