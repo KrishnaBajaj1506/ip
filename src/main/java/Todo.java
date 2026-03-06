@@ -23,6 +23,12 @@ public class Todo extends Task {
         return "[T]" + super.toString();
     }
 
+    /**
+     * Returns the file-serialisable representation of this todo task.
+     *
+     * @return the pipe-separated string for the data file, e.g.
+     *         {@code T | 0 | read book}
+     */
     @Override
     public String toFileFormat() {
         return "T | " + (isDone ? "1" : "0") + " | " + description;
