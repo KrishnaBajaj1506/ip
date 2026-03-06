@@ -73,10 +73,14 @@ public class Storage {
                     case "D":
                         if (parts.length < 4)
                             continue;
-                        Deadline d = new Deadline(description, parts[3]);
-                        if (isDone)
-                            d.markAsDone();
-                        tasks.add(d);
+                        try {
+                            Deadline d = Deadline.of(description, parts[3]);
+                            if (isDone)
+                                d.markAsDone();
+                            tasks.add(d);
+                        } catch (MexicolaException ex) {
+                            // Malformed or unrecognised date — skip this entry
+                        }
                         break;
                     case "E":
                         if (parts.length < 5)

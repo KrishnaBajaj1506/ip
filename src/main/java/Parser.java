@@ -122,7 +122,7 @@ public class Parser {
         if (description.isEmpty() || by.isEmpty()) {
             throw new MexicolaException("OOPS!!! The description or date cannot be empty.");
         }
-        Task t = new Deadline(description, by);
+        Task t = Deadline.of(description, by);
         tasks.addTask(t);
         ui.showTaskAdded(t, tasks.size());
     }
