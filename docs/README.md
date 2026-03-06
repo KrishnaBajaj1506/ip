@@ -1,30 +1,251 @@
-# Duke User Guide
+# 🌮 Mexicola
 
-// Update the title above to match the actual product name
+> **Your personal command-line task manager — fast, simple, and always there when you need it.**
 
-// Product screenshot goes here
+Mexicola is a chatbot that helps you keep on top of your tasks. Type a command, and it responds instantly. Everything is saved automatically — no setup, no fuss.
 
-// Product intro goes here
+---
 
-## Adding deadlines
+## 🚀 Quick Start
 
-// Describe the action and its outcome.
-
-// Give examples of usage
-
-Example: `keyword (optional arguments)`
-
-// A description of the expected outcome goes here
+1. Make sure you have **Java 17** or above installed.
+2. Download `mexicola.jar` from the [Releases](https://github.com/KrishnaBajaj1506/ip/releases) page.
+3. Open a terminal in the same folder and run:
 
 ```
-expected output
+java -jar mexicola.jar
 ```
 
-## Feature ABC
+4. You'll see the welcome message. Start typing commands!
 
-// Feature details
+---
 
+## 📋 Features
 
-## Feature XYZ
+### ✅ `todo` — Add a simple task
 
-// Feature details
+Use this for tasks that have no deadline.
+
+**Format:**
+```
+todo DESCRIPTION
+```
+
+**Example:**
+```
+todo read book
+```
+**Output:**
+```
+____________________________________________________________
+ Got it. I've added this task:
+   [T][ ] read book
+ Now you have 1 tasks in the list.
+____________________________________________________________
+```
+
+---
+
+### ⏰ `deadline` — Add a task with a due date
+
+Use this for tasks that must be completed by a specific date and time.
+
+**Format:**
+```
+deadline DESCRIPTION /by yyyy-MM-dd HHmm
+```
+
+> 📌 Date must be in `yyyy-MM-dd HHmm` format (24-hr clock). It will be displayed in a friendlier format.
+
+**Example:**
+```
+deadline return library book /by 2019-12-02 1800
+```
+**Output:**
+```
+____________________________________________________________
+ Got it. I've added this task:
+   [D][ ] return library book (by: Dec 02 2019, 6:00PM)
+ Now you have 2 tasks in the list.
+____________________________________________________________
+```
+
+---
+
+### 📅 `event` — Add a task with a time range
+
+Use this for things like meetings, classes, or trips.
+
+**Format:**
+```
+event DESCRIPTION /from START /to END
+```
+
+**Example:**
+```
+event project meeting /from Mon 2pm /to Mon 4pm
+```
+**Output:**
+```
+____________________________________________________________
+ Got it. I've added this task:
+   [E][ ] project meeting (from: Mon 2pm to: Mon 4pm)
+ Now you have 3 tasks in the list.
+____________________________________________________________
+```
+
+---
+
+### 📄 `list` — View all your tasks
+
+Displays everything currently in your task list, with their types and status.
+
+**Format:**
+```
+list
+```
+
+**Output:**
+```
+____________________________________________________________
+ Here are the tasks in your list:
+ 1.[T][ ] read book
+ 2.[D][ ] return library book (by: Dec 02 2019, 6:00PM)
+ 3.[E][ ] project meeting (from: Mon 2pm to: Mon 4pm)
+____________________________________________________________
+```
+
+---
+
+### ✔️ `mark` — Mark a task as done
+
+**Format:**
+```
+mark INDEX
+```
+
+**Example:**
+```
+mark 1
+```
+**Output:**
+```
+____________________________________________________________
+ Nice! I've marked this task as done:
+   [T][X] read book
+____________________________________________________________
+```
+
+---
+
+### ↩️ `unmark` — Mark a task as not done
+
+**Format:**
+```
+unmark INDEX
+```
+
+**Example:**
+```
+unmark 1
+```
+**Output:**
+```
+____________________________________________________________
+ OK, I've marked this task as not done yet:
+   [T][ ] read book
+____________________________________________________________
+```
+
+---
+
+### 🔍 `find` — Search for tasks by keyword
+
+Searches all tasks whose descriptions contain the keyword. Case-insensitive.
+
+**Format:**
+```
+find KEYWORD
+```
+
+**Example:**
+```
+find book
+```
+**Output:**
+```
+____________________________________________________________
+ Here are the matching tasks in your list:
+ 1.[T][ ] read book
+ 2.[D][ ] return library book (by: Dec 02 2019, 6:00PM)
+____________________________________________________________
+```
+
+---
+
+### 🗑️ `delete` — Remove a task
+
+**Format:**
+```
+delete INDEX
+```
+
+**Example:**
+```
+delete 2
+```
+**Output:**
+```
+____________________________________________________________
+ Noted. I've removed this task:
+   [D][ ] return library book (by: Dec 02 2019, 6:00PM)
+ Now you have 2 tasks in the list.
+____________________________________________________________
+```
+
+---
+
+### 👋 `bye` — Exit Mexicola
+
+**Format:**
+```
+bye
+```
+
+All tasks are saved automatically before the app closes.
+
+---
+
+## 🗂️ Understanding Task Labels
+
+| Label | Meaning |
+|:---:|---|
+| `[T]` | **Todo** — a task with no date |
+| `[D]` | **Deadline** — due by a specific date/time |
+| `[E]` | **Event** — has a start and end time |
+| `[X]` | Task is **done** ✅ |
+| `[ ]` | Task is **not done yet** |
+
+---
+
+## 💾 Data Storage
+
+Mexicola saves your tasks automatically to `./data/mexicola.txt` after every command. The file is created for you on first run — no manual setup needed.
+
+> ⚠️ **Do not edit this file manually.** Doing so may corrupt your saved data.
+
+---
+
+## 📝 Command Summary
+
+| Command | Format | Example |
+|---|---|---|
+| Todo | `todo DESCRIPTION` | `todo read book` |
+| Deadline | `deadline DESCRIPTION /by yyyy-MM-dd HHmm` | `deadline return book /by 2019-12-02 1800` |
+| Event | `event DESCRIPTION /from START /to END` | `event meeting /from Mon 2pm /to Mon 4pm` |
+| List | `list` | `list` |
+| Mark | `mark INDEX` | `mark 2` |
+| Unmark | `unmark INDEX` | `unmark 2` |
+| Find | `find KEYWORD` | `find book` |
+| Delete | `delete INDEX` | `delete 3` |
+| Exit | `bye` | `bye` |
